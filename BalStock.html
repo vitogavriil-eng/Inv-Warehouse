@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHS OPT-5 - Oil & Gas Spare Parts Inventory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Tema Oil & Gas dengan Ikon Spare Part -->
+    <header class="bg-slate-900 border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-amber-500 rounded-xl text-slate-950 shadow-md flex items-center justify-center">
+                    <i data-lucide="settings" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-xl font-extrabold text-white tracking-wide">SIM-WHS OPT-5</h1>
+                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-semibold rounded-full border border-amber-500/30">SPARE PARTS WAREHOUSE</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Oil & Gas Material Balance & Dashboard Reporting</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="bg-slate-800 border border-slate-700 px-3.5 py-2 rounded-xl flex items-center space-x-2 shadow-inner">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="text-xs text-slate-300">Kurs:</span>
+                    <span class="text-sm font-bold text-emerald-400">Rp 16.720</span>
+                </div>
+                
+                <!-- 2 Fitur Utama Navigasi -->
+                <nav class="flex space-x-1 bg-slate-800 p-1.5 rounded-xl border border-slate-700">
+                    <button type="button" onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 transition shadow cursor-pointer flex items-center space-x-1.5">
+                        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                        <span>1. Dashboard</span>
+                    </button>
+                    <button type="button" onclick="switchTab('inventory')" id="btn-tab-inventory" class="px-4 py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white transition cursor-pointer flex items-center space-x-1.5">
+                        <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                        <span>2. Upload & Stock Report</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ==================== FITUR 1: DASHBOARD ==================== -->
+        <div id="page-dashboard" class="space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Dashboard Executive Summary</h2>
+                    <p class="text-xs text-slate-500">Ringkasan total persediaan dan 4 Main Category utama</p>
+                </div>
+                <div class="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center space-x-1.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span id="dataStatusText">Data Default Aktif (Silakan upload excel di menu No. 2 untuk update)</span>
+                </div>
+            </div>
+
+            <!-- KPI Cards Total & 4 Main Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="bg-slate-900 text-white border border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Total Value Stock</div>
+                    <div class="text-xl font-black text-emerald-400 mt-2" id="kpiTotalUsd">$27,339,903.02</div>
+                    <div class="text-[11px] text-slate-300 font-medium mt-1" id="kpiTotalIdr">Eq. Rp 457.12 Milyar</div>
+                    <div class="absolute right-3 bottom-3 text-slate-800"><i data-lucide="wallet" class="w-12 h-12"></i></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">MP-02</div>
+                    <div class="text-xl font-black text-amber-600 mt-2" id="kpiMpUsd">$10,351,526.91</div>
+                    <div class="text-[11px] text-slate-400 mt-1">Main Category</div>
+                    <div class="absolute right-3 bottom-3 text-slate-100"><i data-lucide="cpu" class="w-12 h-12"></i></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">Direct Charge</div>
+                    <div class="text-xl font-black text-blue-600 mt-2" id="kpiDcUsd">$6,139,732.64</div>
+                    <div class="text-[11px] text-slate-400 mt-1">Main Category</div>
+                    <div class="absolute right-3 bottom-3 text-slate-100"><i data-lucide="zap" class="w-12 h-12"></i></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">Ex Project</div>
+                    <div class="text-xl font-black text-indigo-600 mt-2" id="kpiExProjUsd">$9,282,459.35</div>
+                    <div class="text-[11px] text-slate-400 mt-1">Main Category</div>
+                    <div class="absolute right-3 bottom-3 text-slate-100"><i data-lucide="briefcase" class="w-12 h-12"></i></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div class="text-slate-500 text-[11px] font-semibold uppercase tracking-wider">DC Reclass to Stock</div>
+                    <div class="text-xl font-black text-emerald-600 mt-2" id="kpiReclassUsd">$1,566,181.40</div>
+                    <div class="text-[11px] text-slate-400 mt-1">Main Category</div>
+                    <div class="absolute right-3 bottom-3 text-slate-100"><i data-lucide="refresh-cw" class="w-12 h-12"></i></div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Stock Akhir Value USD per 4 Main Category</h3>
+                    <p class="text-xs text-slate-500 mb-4">Analisis nilai persediaan spare parts gudang</p>
+                    <div class="h-72"><canvas id="categoryBarChart"></canvas></div>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900 mb-1">Proporsi Stock Akhir</h3>
+                    <p class="text-xs text-slate-500 mb-4">Distribusi nilai material</p>
+                    <div class="h-72 flex items-center justify-center"><canvas id="categoryPieChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Summary Table -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <h3 class="text-sm font-bold text-slate-900">Ringkasan Saldo Stock Akhir Main Category</h3>
+                    <button onclick="exportSummaryToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shadow-sm cursor-pointer">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Export Summary Excel</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-600 uppercase font-semibold border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">No</th>
+                                <th class="px-6 py-3.5">Main Category</th>
+                                <th class="px-6 py-3.5 text-right">RCVD Value (USD)</th>
+                                <th class="px-6 py-3.5 text-right">ISSUED Value (USD)</th>
+                                <th class="px-6 py-3.5 text-right">RETURN Value (USD)</th>
+                                <th class="px-6 py-3.5 text-right">Saldo Stock Akhir (USD)</th>
+                                <th class="px-6 py-3.5 text-right">Saldo Stock Akhir (IDR)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700" id="mainCatTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FITUR 2: UPLOAD & STOCK REPORT ==================== -->
+        <div id="page-inventory" class="hidden space-y-6">
+            <!-- Box Upload Excel -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Upload & Update Master Excel WHS OPT-5</h3>
+                        <p class="text-xs text-slate-500">Unggah file Excel (*.xlsx) untuk memperbarui Dashboard dan Stock Report secara instan.</p>
+                    </div>
+                    <label class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 transition shadow-sm cursor-pointer">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                        <span>Pilih File Excel (.xlsx)</span>
+                        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="processExcelUpload(this)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Stock Report Filter & Table -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex flex-wrap gap-4 justify-between items-center">
+                    <div class="flex items-center space-x-3 flex-1 min-w-[300px]">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-slate-400"></i>
+                            <input type="text" id="searchInput" oninput="debounceSearch()" placeholder="Cari KIMAP, PO No, atau Deskripsi..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                        </div>
+                        <select id="catFilter" onchange="filterData()" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                            <option value="">Semua Main Category</option>
+                            <option value="MP-02">MP-02</option>
+                            <option value="DIRECT CHARGE">DIRECT CHARGE</option>
+                            <option value="EX-PROJECT">EX-PROJECT</option>
+                            <option value="DC RECLASS TO STOCK">DC RECLASS TO STOCK</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="text-xs text-slate-500 font-medium">Total: <span id="itemCount" class="font-bold text-slate-900">0</span> items</div>
+                        <button onclick="exportBalanceStockToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition shadow-sm cursor-pointer">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            <span>Export Stock Report (Excel)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabel 7 Field Sesuai Permintaan: PO Number, No Item, Main Category, Kimap, Deskripsi, Qty Stock & Bin Location -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-3.5">PO Number</th>
+                                    <th class="px-4 py-3.5 text-center">No Item</th>
+                                    <th class="px-4 py-3.5">Main Category</th>
+                                    <th class="px-4 py-3.5">KIMAP</th>
+                                    <th class="px-4 py-3.5">Deskripsi Material</th>
+                                    <th class="px-4 py-3.5 text-right">Qty Stock</th>
+                                    <th class="px-4 py-3.5">Bin Location</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700" id="stockTableBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs">
+                        <span class="text-slate-500 font-medium" id="pageInfo">Menampilkan 0 dari 0</span>
+                        <div class="flex space-x-2">
+                            <button type="button" onclick="changePage(-1)" id="prevBtn" class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 disabled:opacity-40 transition cursor-pointer">Sebelumnya</button>
+                            <button type="button" onclick="changePage(1)" id="nextBtn" class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 disabled:opacity-40 transition cursor-pointer">Selanjutnya</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const KURS = 16720;
+        let allStockItems = [];
+        let filteredItems = [];
+        let currentPage = 1;
+        const pageSize = 25;
+
+        let mainCategorySummary = [
+            { name: "MP-02", rcvd: 10656306.06, issued: 305743.05, ret: 963.90, saldoUsd: 10351526.91 },
+            { name: "DIRECT CHARGE", rcvd: 24341151.31, issued: 18859307.99, ret: 657891.02, saldoUsd: 6139732.64 },
+            { name: "EX-PROJECT", rcvd: 19574272.44, issued: 10699182.08, ret: 407368.99, saldoUsd: 9282459.35 },
+            { name: "DC RECLASS TO STOCK", rcvd: 2798624.72, issued: 1328909.79, ret: 96466.48, saldoUsd: 1566181.40 }
+        ];
+
+        const fmtUsd = (num) => '$' + (num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmtIdr = (num) => 'Rp ' + (num || 0).toLocaleString('id-ID', { maximumFractionDigits: 0 });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            updateDashboard();
+            renderStockTable();
+        });
+
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'inventory'];
+            tabs.forEach(t => {
+                const pageEl = document.getElementById(`page-${t}`);
+                const btnEl = document.getElementById(`btn-tab-${t}`);
+                if (pageEl) pageEl.classList.add('hidden');
+                if (btnEl) {
+                    btnEl.className = "px-4 py-2 text-xs font-semibold rounded-lg text-slate-300 hover:text-white transition cursor-pointer flex items-center space-x-1.5";
+                }
+            });
+
+            const targetPage = document.getElementById(`page-${tabName}`);
+            const targetBtn = document.getElementById(`btn-tab-${tabName}`);
+            if (targetPage) targetPage.classList.remove('hidden');
+            if (targetBtn) {
+                targetBtn.className = "px-4 py-2 text-xs font-semibold rounded-lg text-white bg-blue-600 transition shadow cursor-pointer flex items-center space-x-1.5";
+            }
+        }
+
+        function updateDashboard() {
+            let totalUsd = mainCategorySummary.reduce((acc, c) => acc + c.saldoUsd, 0);
+            document.getElementById("kpiTotalUsd").innerText = fmtUsd(totalUsd);
+            document.getElementById("kpiTotalIdr").innerText = "Eq. " + fmtIdr(totalUsd * KURS);
+
+            const getCatUsd = (name) => {
+                let found = mainCategorySummary.find(c => c.name.toUpperCase().includes(name));
+                return found ? found.saldoUsd : 0;
+            };
+
+            document.getElementById("kpiMpUsd").innerText = fmtUsd(getCatUsd("MP-02"));
+            document.getElementById("kpiDcUsd").innerText = fmtUsd(getCatUsd("DIRECT CHARGE"));
+            document.getElementById("kpiExProjUsd").innerText = fmtUsd(getCatUsd("EX-PROJECT"));
+            document.getElementById("kpiReclassUsd").innerText = fmtUsd(getCatUsd("RECLASS"));
+
+            const tbody = document.getElementById("mainCatTableBody");
+            tbody.innerHTML = "";
+            mainCategorySummary.forEach((cat, idx) => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-slate-500 font-bold">${idx + 1}</td>
+                    <td class="px-6 py-4 font-bold text-slate-900">${cat.name}</td>
+                    <td class="px-6 py-4 text-right font-mono text-slate-700">${fmtUsd(cat.rcvd)}</td>
+                    <td class="px-6 py-4 text-right font-mono text-rose-600">${fmtUsd(cat.issued)}</td>
+                    <td class="px-6 py-4 text-right font-mono text-amber-600">${fmtUsd(cat.ret)}</td>
+                    <td class="px-6 py-4 text-right font-mono font-extrabold text-blue-600">${fmtUsd(cat.saldoUsd)}</td>
+                    <td class="px-6 py-4 text-right font-mono text-slate-700">${fmtIdr(cat.saldoUsd * KURS)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderCharts();
+        }
+
+        let barChartInstance = null, pieChartInstance = null;
+
+        function renderCharts() {
+            const labels = mainCategorySummary.map(c => c.name);
+            const dataUsd = mainCategorySummary.map(c => c.saldoUsd);
+
+            if (barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(document.getElementById('categoryBarChart'), {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Stock Akhir (USD)', data: dataUsd, backgroundColor: ['#d97706', '#2563eb', '#4f46e5', '#059669'], borderRadius: 8 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            if (pieChartInstance) pieChartInstance.destroy();
+            pieChartInstance = new Chart(document.getElementById('categoryPieChart'), {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: dataUsd, backgroundColor: ['#d97706', '#2563eb', '#4f46e5', '#059669'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#334155', boxWidth: 12, font: { weight: '600' } } } } }
+            });
+        }
+
+        let searchTimer;
+        function debounceSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(filterData, 200);
+        }
+
+        function filterData() {
+            const search = document.getElementById("searchInput").value.toLowerCase().trim();
+            const cat = document.getElementById("catFilter").value;
+
+            filteredItems = allStockItems.filter(item => {
+                const matchesSearch = !search || item.k.toLowerCase().includes(search) || item.p.toLowerCase().includes(search) || item.d.toLowerCase().includes(search);
+                const matchesCat = !cat || item.m.includes(cat);
+                return matchesSearch && matchesCat;
+            });
+
+            currentPage = 1;
+            renderStockTable();
+        }
+
+        function renderStockTable() {
+            const tbody = document.getElementById("stockTableBody");
+            tbody.innerHTML = "";
+
+            const total = filteredItems.length;
+            document.getElementById("itemCount").innerText = total.toLocaleString();
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400 font-medium">Belum ada data material. Silakan upload file Excel WHS OPT-5 pada menu "2. Upload & Stock Report".</td></tr>`;
+                document.getElementById("pageInfo").innerText = "Menampilkan 0 dari 0";
+                return;
+            }
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, total);
+            const pageItems = filteredItems.slice(startIdx, endIdx);
+
+            let fragment = document.createDocumentFragment();
+            pageItems.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-mono font-bold text-slate-900">${item.p}</td>
+                    <td class="px-4 py-3 text-center font-mono text-slate-500">${item.i}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 text-[10px] rounded font-medium bg-slate-100 text-slate-700 border border-slate-200">${item.m}</span></td>
+                    <td class="px-4 py-3 font-mono font-bold text-blue-600">${item.k}</td>
+                    <td class="px-4 py-3 text-slate-700 truncate max-w-[260px]">${item.d}</td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-slate-900">${item.q.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-slate-600 font-mono">${item.b}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+
+            tbody.appendChild(fragment);
+            document.getElementById("pageInfo").innerText = `Menampilkan ${startIdx + 1}-${endIdx} dari ${total.toLocaleString()} material`;
+            document.getElementById("prevBtn").disabled = currentPage === 1;
+            document.getElementById("nextBtn").disabled = endIdx >= total;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderStockTable();
+        }
+
+        function processExcelUpload(input) {
+            if (input.files.length === 0) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    const sheetStock = workbook.SheetNames.includes('Stock - Balance') ? 'Stock - Balance' : workbook.SheetNames[0];
+                    const rowsStock = XLSX.utils.sheet_to_json(workbook.Sheets[sheetStock], { header: 1 });
+
+                    let parsedItems = [];
+                    for (let i = 3; i < rowsStock.length; i++) {
+                        let r = rowsStock[i];
+                        if (!r || r.length < 13) continue;
+                        let kimap = r[2], poNo = r[3], itemNo = r[4], mainCat = r[8], desc = r[12], binLoc = r[23];
+                        let netRcvd = parseFloat(r[17]) || parseFloat(r[15]) || 0;
+                        let giQty = parseFloat(r[18]) || 0;
+                        let retQty = parseFloat(r[19]) || 0;
+
+                        if (kimap && mainCat && mainCat !== 'Grand Total') {
+                            let sisaQty = netRcvd - giQty + retQty;
+                            if (sisaQty < 0) sisaQty = 0;
+                            let cleanCat = String(mainCat).trim().toUpperCase();
+                            if (cleanCat.includes('MP-02')) cleanCat = 'MP-02';
+
+                            parsedItems.push({
+                                p: String(poNo || '-'),
+                                i: String(itemNo || '-'),
+                                m: cleanCat,
+                                k: String(kimap),
+                                d: String(desc || '-'),
+                                q: sisaQty,
+                                b: String(binLoc || '-')
+                            });
+                        }
+                    }
+
+                    if (parsedItems.length > 0) {
+                        allStockItems = parsedItems;
+                        filteredItems = [...allStockItems];
+                        filterData();
+                    }
+
+                    document.getElementById("dataStatusText").innerText = `Data Excel Berhasil Diperbarui (${allStockItems.length.toLocaleString()} items)`;
+                    alert(`Berhasil mengimpor file Excel! ${allStockItems.length.toLocaleString()} material stock berhasil dimuat.`);
+                    switchTab('dashboard');
+                } catch (err) {
+                    console.error(err);
+                    alert("Gagal memproses file Excel. Pastikan format file sesuai.");
+                }
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+        }
+
+        function exportBalanceStockToExcel() {
+            if (filteredItems.length === 0) {
+                alert("Tidak ada data stock untuk diexport.");
+                return;
+            }
+
+            const exportData = filteredItems.map((item, index) => ({
+                "No": index + 1,
+                "PO Number": item.p,
+                "No Item": item.i,
+                "Main Category": item.m,
+                "KIMAP": item.k,
+                "Deskripsi Material": item.d,
+                "Qty Stock": item.q,
+                "Bin Location": item.b
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Stock Report");
+            XLSX.writeFile(workbook, "Stock_Report_WHS_OPT5.xlsx");
+        }
+
+        function exportSummaryToExcel() {
+            const exportSummary = mainCategorySummary.map((cat, index) => ({
+                "No": index + 1, "Main Category": cat.name, "RCVD Value (USD)": cat.rcvd,
+                "ISSUED Value (USD)": cat.issued, "RETURN Value (USD)": cat.ret,
+                "Saldo Stock Akhir (USD)": cat.saldoUsd, "Saldo Stock Akhir (IDR @16720)": cat.saldoUsd * KURS
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportSummary);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
+            XLSX.writeFile(workbook, "Summary_Main_Category.xlsx");
+        }
+    </script>
+</body>
+</html>
+ss="px-4 py-2.5 font-mono text-slate-600">${item.date}</td>
+                    <td class="px-4 py-2.5 font-mono font-bold text-slate-900">${item.po}</td>
+                    <td class="px-4 py-2.5 font-mono text-slate-700">${item.k}</td>
+                    <td class="px-4 py-2.5 text-slate-600 truncate max-w-[200px]">${item.d}</td>
+                    <td class="px-4 py-2.5 text-right font-mono font-bold text-rose-600">${item.qty.toLocaleString()}</td>
+                `;
+                giTbody.appendChild(tr);
+            });
+        }
+
+        let searchTimer;
+        function debounceSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(filterData, 200);
+        }
+
+        function filterData() {
+            const search = document.getElementById("searchInput").value.toLowerCase().trim();
+            const cat = document.getElementById("catFilter").value;
+
+            filteredItems = allStockItems.filter(item => {
+                const matchesSearch = !search || item.k.toLowerCase().includes(search) || item.p.toLowerCase().includes(search) || item.d.toLowerCase().includes(search);
+                const matchesCat = !cat || item.m.includes(cat);
+                return matchesSearch && matchesCat;
+            });
+
+            currentPage = 1;
+            renderStockTable();
+        }
+
+        function renderStockTable() {
+            const tbody = document.getElementById("stockTableBody");
+            tbody.innerHTML = "";
+
+            const total = filteredItems.length;
+            document.getElementById("itemCount").innerText = total.toLocaleString();
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 text-slate-400 font-medium">Belum ada data material. Silakan upload file Excel WHS OPT-5 pada menu "3. Upload & Stock Report".</td></tr>`;
+                document.getElementById("pageInfo").innerText = "Menampilkan 0 dari 0";
+                return;
+            }
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, total);
+            const pageItems = filteredItems.slice(startIdx, endIdx);
+
+            let fragment = document.createDocumentFragment();
+            pageItems.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-mono font-bold text-slate-900">${item.p}</td>
+                    <td class="px-4 py-3 text-center font-mono text-slate-500">${item.i}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-0.5 text-[10px] rounded font-medium bg-slate-100 text-slate-700 border border-slate-200">${item.m}</span></td>
+                    <td class="px-4 py-3 font-mono font-bold text-blue-600">${item.k}</td>
+                    <td class="px-4 py-3 text-slate-700 truncate max-w-[260px]">${item.d}</td>
+                    <td class="px-4 py-3 text-right font-mono font-bold text-slate-900">${item.q.toLocaleString()}</td>
+                    <td class="px-4 py-3 text-slate-600 font-mono">${item.b}</td>
+                `;
+                fragment.appendChild(tr);
+            });
+
+            tbody.appendChild(fragment);
+            document.getElementById("pageInfo").innerText = `Menampilkan ${startIdx + 1}-${endIdx} dari ${total.toLocaleString()} material`;
+            document.getElementById("prevBtn").disabled = currentPage === 1;
+            document.getElementById("nextBtn").disabled = endIdx >= total;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderStockTable();
+        }
+
+        function processExcelUpload(input) {
+            if (input.files.length === 0) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // 1. Parse Stock - Balance
+                    const sheetStock = workbook.SheetNames.includes('Stock - Balance') ? 'Stock - Balance' : workbook.SheetNames[0];
+                    const rowsStock = XLSX.utils.sheet_to_json(workbook.Sheets[sheetStock], { header: 1 });
+
+                    let parsedItems = [];
+                    for (let i = 3; i < rowsStock.length; i++) {
+                        let r = rowsStock[i];
+                        if (!r || r.length < 13) continue;
+                        let kimap = r[2], poNo = r[3], itemNo = r[4], mainCat = r[8], desc = r[12], binLoc = r[23];
+                        let netRcvd = parseFloat(r[17]) || parseFloat(r[15]) || 0;
+                        let giQty = parseFloat(r[18]) || 0;
+                        let retQty = parseFloat(r[19]) || 0;
+
+                        if (kimap && mainCat && mainCat !== 'Grand Total') {
+                            let sisaQty = netRcvd - giQty + retQty;
+                            if (sisaQty < 0) sisaQty = 0;
+                            let cleanCat = String(mainCat).trim().toUpperCase();
+                            if (cleanCat.includes('MP-02')) cleanCat = 'MP-02';
+
+                            parsedItems.push({
+                                p: String(poNo || '-'),
+                                i: String(itemNo || '-'),
+                                m: cleanCat,
+                                k: String(kimap),
+                                d: String(desc || '-'),
+                                q: sisaQty,
+                                b: String(binLoc || '-')
+                            });
+                        }
+                    }
+
+                    if (parsedItems.length > 0) {
+                        allStockItems = parsedItems;
+                        filteredItems = [...allStockItems];
+                        filterData();
+                    }
+
+                    // 2. Parse GR for Weekly Activity (Auto Filter Tahun Terbaru & Week Max dari sheet GR)
+                    if (workbook.SheetNames.includes('GR')) {
+                        const rowsGR = XLSX.utils.sheet_to_json(workbook.Sheets['GR'], { header: 1 });
+                        let rawGR = [];
+                        for (let i = 1; i < rowsGR.length; i++) {
+                            let r = rowsGR[i];
+                            if (!r || r.length < 16) continue;
+                            let dateVal = r[6] || r[13];
+                            let weekVal = r[15]; // Kolom WEEK
+                            let po = r[7], kimap = r[16], desc = r[17], qty = parseFloat(r[19]) || 0;
+                            if (dateVal) {
+                                let d = new Date(typeof dateVal === 'number' ? XLSX.SSF.parse_date_code(dateVal) : dateVal);
+                                if (!isNaN(d.getTime())) {
+                                    rawGR.push({ dObj: d, year: d.getFullYear(), week: parseInt(weekVal) || 0, date: formatDate(dateVal), po: String(po||'-'), k: String(kimap||'-'), d: String(desc||'-'), qty });
+                                }
+                            }
+                        }
+                        if (rawGR.length > 0) {
+                            let maxYearGR = Math.max(...rawGR.map(item => item.year));
+                            let grInLatestYear = rawGR.filter(item => item.year === maxYearGR);
+                            let maxWeekGR = Math.max(...grInLatestYear.map(item => item.week));
+
+                            weeklyGR = grInLatestYear.filter(item => item.week === maxWeekGR);
+                            document.getElementById("weeklyRangeText").innerText = `Tahun GR: ${maxYearGR} | Week Max: ${maxWeekGR}`;
+                        }
+                    }
+
+                    // 3. Parse GI for Weekly Activity (Auto Filter Tahun Terbaru & Week Max dari sheet GI)
+                    if (workbook.SheetNames.includes('GI')) {
+                        const rowsGI = XLSX.utils.sheet_to_json(workbook.Sheets['GI'], { header: 1 });
+                        let rawGI = [];
+                        for (let i = 1; i < rowsGI.length; i++) {
+                            let r = rowsGI[i];
+                            if (!r || r.length < 17) continue;
+                            let dateVal = r[11]; // Issueing Date
+                            let weekVal = r[13]; // Kolom WEEK
+                            let po = r[4], kimap = r[14], desc = r[15], qty = parseFloat(r[16]) || 0;
+                            if (dateVal) {
+                                let d = new Date(typeof dateVal === 'number' ? XLSX.SSF.parse_date_code(dateVal) : dateVal);
+                                if (!isNaN(d.getTime())) {
+                                    rawGI.push({ dObj: d, year: d.getFullYear(), week: parseInt(weekVal) || 0, date: formatDate(dateVal), po: String(po||'-'), k: String(kimap||'-'), d: String(desc||'-'), qty });
+                                }
+                            }
+                        }
+                        if (rawGI.length > 0) {
+                            let maxYearGI = Math.max(...rawGI.map(item => item.year));
+                            let giInLatestYear = rawGI.filter(item => item.year === maxYearGI);
+                            let maxWeekGI = Math.max(...giInLatestYear.map(item => item.week));
+
+                            weeklyGI = giInLatestYear.filter(item => item.week === maxWeekGI);
+                        }
+                    }
+
+                    renderWeeklyActivity();
+                    document.getElementById("dataStatusText").innerText = `Data Excel Berhasil Diperbarui (${allStockItems.length.toLocaleString()} items)`;
+                    alert(`Berhasil mengimpor file Excel! ${allStockItems.length.toLocaleString()} material stock, ${weeklyGR.length} GR mingguan, dan ${weeklyGI.length} GI mingguan berhasil dimuat secara otomatis.`);
+                    switchTab('dashboard');
+                } catch (err) {
+                    console.error(err);
+                    alert("Gagal memproses file Excel. Pastikan format file sesuai.");
+                }
+            };
+            reader.readAsArrayBuffer(input.files[0]);
+        }
+
+        function exportBalanceStockToExcel() {
+            if (filteredItems.length === 0) {
+                alert("Tidak ada data stock untuk diexport.");
+                return;
+            }
+
+            const exportData = filteredItems.map((item, index) => ({
+                "No": index + 1,
+                "PO Number": item.p,
+                "No Item": item.i,
+                "Main Category": item.m,
+                "KIMAP": item.k,
+                "Deskripsi Material": item.d,
+                "Qty Stock": item.q,
+                "Bin Location": item.b
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Stock Report");
+            XLSX.writeFile(workbook, "Stock_Report_WHS_OPT5.xlsx");
+        }
+
+        function exportSummaryToExcel() {
+            const exportSummary = mainCategorySummary.map((cat, index) => ({
+                "No": index + 1, "Main Category": cat.name, "RCVD Value (USD)": cat.rcvd,
+                "ISSUED Value (USD)": cat.issued, "RETURN Value (USD)": cat.ret,
+                "Saldo Stock Akhir (USD)": cat.saldoUsd, "Saldo Stock Akhir (IDR @16720)": cat.saldoUsd * KURS
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportSummary);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
+            XLSX.writeFile(workbook, "Summary_Main_Category.xlsx");
+        }
+    </script>
+</body>
+</html>
+SX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary");
+            XLSX.writeFile(workbook, "Summary_Main_Category.xlsx");
+        }
+    </script>
+</body>
+</html>
